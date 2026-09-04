@@ -1,8 +1,8 @@
 class Amber < Formula
   desc "C++ AI agent harness: headless CLI, ncurses TUI, benchmark harness"
   homepage "https://github.com/jtrefon/amber"
-  url "https://github.com/jtrefon/amber/releases/download/v#{version}/amber-#{version}-darwin-#{Hardware::CPU.arch}.tar.gz"
   version "0.4.0"
+  url "https://github.com/jtrefon/amber/releases/download/v#{version}/amber-#{version}-darwin-#{Hardware::CPU.arch}.tar.gz"
   license "Apache-2.0"
 
   # Populated by the bump workflow from the release checksums (see
