@@ -1,9 +1,9 @@
 name: bump
 
 # Wires this tap's formula to each new amber release: reads the darwin
-# tarball checksums from the GitHub Release and patches Formula/amber.rb.
-# Runs on a schedule and on demand; a release event from the amber repo via
-# `repository_dispatch` also triggers it.
+# tarball checksums from the GitHub Release, patches the pinned version and
+# per-arch SHA blocks in Formula/amber.rb, and commits. Runs on a schedule,
+# on demand, and via repository_dispatch from the amber repo's release.
 
 on:
   workflow_dispatch:
@@ -21,36 +21,42 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Fetch latest release checksums and patch formula
+      - name: Fetch latest release and patch formula
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          tag=$(gh release view latest --repo jtrefon/amber --json tagName --jq .tagName)
+          ver=${tag#v}
           tmp=$(mktemp -d)
-          gh release download latest \
+          gh release download "$tag" \
             --repo jtrefon/amber --dir "$tmp" \
             --pattern 'amber-*-darwin-*.tar.gz.sha256' 2>/dev/null || {
-            echo "no darwin checksums on latest release; nothing to do"
+            echo "no darwin checksums on ${tag}; nothing to do"
             exit 0
           }
           shas=$(cat "$tmp"/*.sha256)
           arm=$(echo "$shas" | awk '/darwin-arm64/ {print $1}')
           intel=$(echo "$shas" | awk '/darwin-x86_64/ {print $1}')
-          if [ -z "$arm" ] || [ -z "$intel" ]; then
-            echo "missing per-arch checksums (arm='$arm' intel='$intel')"; exit 1
-          fi
+          [ -n "$arm" ] || { echo "missing arm64 checksum"; exit 1; }
+          export FORMULA_VERSION="$ver" ARM_SHA="$arm" INTEL_SHA="$intel"
           ruby -e '
             content = File.read("Formula/amber.rb")
-            arm = ENV.fetch("ARM_SHA")
-            intel = ENV.fetch("INTEL_SHA")
-            unless content.include?(arm) && content.include?(intel)
-              content.sub!(/on_arm do\n\s*sha256 "[^"]*"/,
-                           "on_arm do\n    sha256 \"#{arm}\"")
-              content.sub!(/on_intel do\n\s*sha256 "[^"]*"/,
-                           "on_intel do\n    sha256 \"#{intel}\"")
-              File.write("Formula/amber.rb", content)
+            content.sub!(/version "[^"]*"/, "version \"#{ENV.fetch("FORMULA_VERSION")}\"")
+            content.sub!(/on_arm do\n\s*sha256 "[^"]*"/,
+                         "on_arm do\n    sha256 \"#{ENV.fetch("ARM_SHA")}\"")
+            # Fill (or reveal) the intel block when an x86_64 sha exists.
+            if ENV.fetch("INTEL_SHA") != ""
+              if content.include?("# on_intel do")
+                content.sub!("# on_intel do\n  #   sha256 \"REPLACE_ME\"\n  # end",
+                             "on_intel do\n    sha256 \"#{ENV.fetch("INTEL_SHA")}\"\n  end")
+              else
+                content.sub!(/on_intel do\n\s*sha256 "[^"]*"/,
+                             "on_intel do\n    sha256 \"#{ENV.fetch("INTEL_SHA")}\"")
+              end
             end
-          ' ARM_SHA="$arm" INTEL_SHA="$intel"
+            File.write("Formula/amber.rb", content)
+          '
           rm -rf "$tmp"
 
       - name: Commit and push if changed
