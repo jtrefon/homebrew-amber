@@ -1,0 +1,39 @@
+class Amber < Formula
+  desc "C++ AI agent harness: headless CLI, ncurses TUI, benchmark harness"
+  homepage "https://github.com/jtrefon/amber"
+  url "https://github.com/jtrefon/amber/releases/download/v#{version}/amber-#{version}-darwin-#{Hardware::CPU.arch}.tar.gz"
+  license "Apache-2.0"
+
+  # Populated by the bump workflow from the release checksums (see
+  # .github/workflows/bump.yml). Shas are for the darwin tarballs attached to
+  # each GitHub Release.
+  on_arm do
+    sha256 "REPLACE_ME"
+  end
+  on_intel do
+    sha256 "REPLACE_ME"
+  end
+
+  # The release tarball is a staged install tree (usr/local/{bin,lib,include,
+  # share}); place the pieces into the brew prefix. amber resolves its data
+  # files relative to argv0, so the layout works on Intel (/usr/local) and
+  # Apple Silicon (/opt/homebrew) alike.
+  def install
+    %w[amber amber-cli amber-bench].each do |binary|
+      bin.install "usr/local/bin/#{binary}"
+    end
+    lib.install Dir["usr/local/lib/*.a"]
+    include.install "usr/local/include/agent" => "agent"
+    share.install "usr/local/share/amber" => "amber"
+  end
+
+  test do
+    version_out = shell_output("#{bin}/amber-cli --version")
+    assert_match(/v?#{version}/, version_out)
+  end
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
+end

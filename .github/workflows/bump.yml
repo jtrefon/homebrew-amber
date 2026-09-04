@@ -1,0 +1,66 @@
+name: bump
+
+# Wires this tap's formula to each new amber release: reads the darwin
+# tarball checksums from the GitHub Release and patches Formula/amber.rb.
+# Runs on a schedule and on demand; a release event from the amber repo via
+# `repository_dispatch` also triggers it.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
+  repository_dispatch:
+    types: [release]
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Fetch latest release checksums and patch formula
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tmp=$(mktemp -d)
+          gh release download latest \
+            --repo jtrefon/amber --dir "$tmp" \
+            --pattern 'amber-*-darwin-*.tar.gz.sha256' 2>/dev/null || {
+            echo "no darwin checksums on latest release; nothing to do"
+            exit 0
+          }
+          shas=$(cat "$tmp"/*.sha256)
+          arm=$(echo "$shas" | awk '/darwin-arm64/ {print $1}')
+          intel=$(echo "$shas" | awk '/darwin-x86_64/ {print $1}')
+          if [ -z "$arm" ] || [ -z "$intel" ]; then
+            echo "missing per-arch checksums (arm='$arm' intel='$intel')"; exit 1
+          fi
+          ruby -e '
+            content = File.read("Formula/amber.rb")
+            arm = ENV.fetch("ARM_SHA")
+            intel = ENV.fetch("INTEL_SHA")
+            unless content.include?(arm) && content.include?(intel)
+              content.sub!(/on_arm do\n\s*sha256 "[^"]*"/,
+                           "on_arm do\n    sha256 \"#{arm}\"")
+              content.sub!(/on_intel do\n\s*sha256 "[^"]*"/,
+                           "on_intel do\n    sha256 \"#{intel}\"")
+              File.write("Formula/amber.rb", content)
+            end
+          ' ARM_SHA="$arm" INTEL_SHA="$intel"
+          rm -rf "$tmp"
+
+      - name: Commit and push if changed
+        run: |
+          if ! git diff --quiet Formula/amber.rb; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add Formula/amber.rb
+            git commit -m "bump: sync amber formula to latest release"
+            git push
+          else
+            echo "formula already current"
+          fi
