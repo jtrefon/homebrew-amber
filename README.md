@@ -50,6 +50,18 @@ above — never a bare `brew install amber`.
 Releases are tag-driven from the main repository; a GitHub Action in this tap
 wires the formula to each new release automatically.
 
+## Upgrading from the old formula name
+
+Releases before 0.4.1 used the tap formula name `amber`. Because that name
+collides with an unrelated project in homebrew-core, the formula was renamed
+to `amber-agent`; `brew upgrade` cannot follow the rename, so if you installed
+the old name, migrate it once:
+
+```sh
+brew uninstall jtrefon/homebrew-amber/amber
+brew install jtrefon/homebrew-amber/amber-agent
+```
+
 ## What you get
 
 - `amber` — ncurses terminal UI
