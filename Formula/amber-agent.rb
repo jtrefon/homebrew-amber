@@ -1,7 +1,7 @@
 class AmberAgent < Formula
   desc "C++ AI agent harness: headless CLI, ncurses TUI, benchmark harness"
   homepage "https://github.com/jtrefon/amber"
-  version "0.4.4"
+  version "0.4.5"
   url "https://github.com/jtrefon/amber/releases/download/v#{version}/amber-#{version}-darwin-#{Hardware::CPU.arch}.tar.gz"
   license "Apache-2.0"
 
@@ -9,7 +9,7 @@ class AmberAgent < Formula
   # .github/workflows/bump.yml). Shas are for the darwin tarballs attached to
   # each GitHub Release.
   on_arm do
-    sha256 "3da9af81aed93a00635de30808af81a67d0a45d7e68f8cbac251afc543480dcf"
+    sha256 "b48e2ef88e18db88bdd0d08d57cab805d7335c399d345572e2283bc21c838426"
   end
   # Intel tarballs ship once release-macos runs an x86_64 runner; the matching
   # on_intel/sha256 block lands here via the bump workflow.
