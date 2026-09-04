@@ -16,13 +16,13 @@ Or the classic two-step:
 
 ```sh
 brew tap jtrefon/homebrew-amber
-brew install amber
+brew install jtrefon/homebrew-amber/amber-agent
 ```
 
 The fully-qualified form also works without a separate `brew tap`:
 
 ```sh
-brew install jtrefon/homebrew-amber/amber
+brew install jtrefon/homebrew-amber/amber-agent
 ```
 
 ## Requirements
@@ -40,8 +40,12 @@ right-click-to-open workaround, no "unidentified developer" warning. The
 ## Updating
 
 ```sh
-brew upgrade amber
+brew upgrade jtrefon/homebrew-amber/amber-agent
 ```
+
+Note: a different, unrelated project called `amber` (a Crystal web
+framework) ships in homebrew-core, so always use the fully-qualified name
+above — never a bare `brew install amber`.
 
 Releases are tag-driven from the main repository; a GitHub Action in this tap
 wires the formula to each new release automatically.

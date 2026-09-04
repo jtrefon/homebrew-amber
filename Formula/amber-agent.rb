@@ -1,4 +1,4 @@
-class Amber < Formula
+class AmberAgent < Formula
   desc "C++ AI agent harness: headless CLI, ncurses TUI, benchmark harness"
   homepage "https://github.com/jtrefon/amber"
   version "0.4.1"

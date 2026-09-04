@@ -14,7 +14,7 @@ fi
 
 export HOMEBREW_NO_AUTO_UPDATE=1
 echo "==> Installing amber..."
-brew install jtrefon/homebrew-amber/amber
+brew install jtrefon/homebrew-amber/amber-agent
 
 cat <<'EOF'
 
