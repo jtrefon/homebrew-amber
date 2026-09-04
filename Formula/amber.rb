@@ -8,11 +8,13 @@ class Amber < Formula
   # .github/workflows/bump.yml). Shas are for the darwin tarballs attached to
   # each GitHub Release.
   on_arm do
-    sha256 "REPLACE_ME"
+    sha256 "6848c13f23bb2b6197d1d26ea0a060601c7c292db65dfbafdfa9318ee9b8be8a"
   end
-  on_intel do
-    sha256 "REPLACE_ME"
-  end
+  # Intel tarballs ship once release-macos runs an x86_64 runner; the matching
+  # on_intel/sha256 block lands here via the bump workflow.
+  # on_intel do
+  #   sha256 "REPLACE_ME"
+  # end
 
   # The release tarball is a staged install tree (usr/local/{bin,lib,include,
   # share}); place the pieces into the brew prefix. amber resolves its data
