@@ -18,16 +18,16 @@ class Amber < Formula
   # end
 
   # The release tarball is a staged install tree (usr/local/{bin,lib,include,
-  # share}); place the pieces into the brew prefix. amber resolves its data
-  # files relative to argv0, so the layout works on Intel (/usr/local) and
-  # Apple Silicon (/opt/homebrew) alike.
+  # share}). Homebrew hoists the single top-level directory, so the staged
+  # contents land under local/... here. amber resolves its data files relative
+  # to argv0, so the layout works on Intel and Apple Silicon alike.
   def install
     %w[amber amber-cli amber-bench].each do |binary|
-      bin.install "usr/local/bin/#{binary}"
+      bin.install "local/bin/#{binary}"
     end
-    lib.install Dir["usr/local/lib/*.a"]
-    include.install "usr/local/include/agent" => "agent"
-    share.install "usr/local/share/amber" => "amber"
+    lib.install Dir["local/lib/*.a"]
+    include.install "local/include/agent" => "agent"
+    share.install "local/share/amber" => "amber"
   end
 
   test do
