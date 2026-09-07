@@ -26,7 +26,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          tag=$(gh release view latest --repo jtrefon/amber --json tagName --jq .tagName)
+          # gh release view latest resolves the literal tag "latest" on newer
+          # gh versions (2.100+) and fails with "release not found"; the REST
+          # latest endpoint returns the true latest release pointer.
+          tag=$(gh api repos/jtrefon/amber/releases/latest --jq .tag_name)
           ver=${tag#v}
           tmp=$(mktemp -d)
           gh release download "$tag" \
