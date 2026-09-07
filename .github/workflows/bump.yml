@@ -31,6 +31,7 @@ jobs:
           # latest endpoint returns the true latest release pointer.
           tag=$(gh api repos/jtrefon/amber/releases/latest --jq .tag_name)
           ver=${tag#v}
+          formula=Formula/amber-agent.rb
           tmp=$(mktemp -d)
           gh release download "$tag" \
             --repo jtrefon/amber --dir "$tmp" \
@@ -42,9 +43,9 @@ jobs:
           arm=$(echo "$shas" | awk '/darwin-arm64/ {print $1}')
           intel=$(echo "$shas" | awk '/darwin-x86_64/ {print $1}')
           [ -n "$arm" ] || { echo "missing arm64 checksum"; exit 1; }
-          export FORMULA_VERSION="$ver" ARM_SHA="$arm" INTEL_SHA="$intel"
+          export FORMULA_VERSION="$ver" ARM_SHA="$arm" INTEL_SHA="$intel" FORMULA_FILE="$formula"
           ruby -e '
-            content = File.read("Formula/amber.rb")
+            content = File.read(ENV.fetch("FORMULA_FILE"))
             content.sub!(/version "[^"]*"/, "version \"#{ENV.fetch("FORMULA_VERSION")}\"")
             content.sub!(/on_arm do\n\s*sha256 "[^"]*"/,
                          "on_arm do\n    sha256 \"#{ENV.fetch("ARM_SHA")}\"")
@@ -58,16 +59,16 @@ jobs:
                              "on_intel do\n    sha256 \"#{ENV.fetch("INTEL_SHA")}\"")
               end
             end
-            File.write("Formula/amber.rb", content)
+            File.write(ENV.fetch("FORMULA_FILE"), content)
           '
           rm -rf "$tmp"
 
       - name: Commit and push if changed
         run: |
-          if ! git diff --quiet Formula/amber.rb; then
+          if ! git diff --quiet Formula/amber-agent.rb; then
             git config user.name  "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add Formula/amber.rb
+            git add Formula/amber-agent.rb
             git commit -m "bump: sync amber formula to latest release"
             git push
           else
