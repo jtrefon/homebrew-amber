@@ -27,7 +27,7 @@ brew install jtrefon/homebrew-amber/amber-agent
 
 ## Requirements
 
-- macOS 13+ on Apple Silicon or Intel
+- macOS 13+ on Apple Silicon (arm64)
 - [Homebrew](https://brew.sh) (the one-line installer handles this for you)
 
 ## No Gatekeeper dance

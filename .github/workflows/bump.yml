@@ -1,9 +1,10 @@
 name: bump
 
 # Wires this tap's formula to each new amber release: reads the darwin
-# tarball checksums from the GitHub Release, patches the pinned version and
-# per-arch SHA blocks in Formula/amber.rb, and commits. Runs on a schedule,
-# on demand, and via repository_dispatch from the amber repo's release.
+# arm64 tarball checksum from the GitHub Release, patches the pinned version
+# and on_arm SHA block in Formula/amber-agent.rb, and commits. Runs on a
+# schedule, on demand, and via repository_dispatch from the amber repo's
+# release. Apple Silicon only — amber no longer ships Intel macOS tarballs.
 
 on:
   workflow_dispatch:
@@ -41,24 +42,13 @@ jobs:
           }
           shas=$(cat "$tmp"/*.sha256)
           arm=$(echo "$shas" | awk '/darwin-arm64/ {print $1}')
-          intel=$(echo "$shas" | awk '/darwin-x86_64/ {print $1}')
           [ -n "$arm" ] || { echo "missing arm64 checksum"; exit 1; }
-          export FORMULA_VERSION="$ver" ARM_SHA="$arm" INTEL_SHA="$intel" FORMULA_FILE="$formula"
+          export FORMULA_VERSION="$ver" ARM_SHA="$arm" FORMULA_FILE="$formula"
           ruby -e '
             content = File.read(ENV.fetch("FORMULA_FILE"))
             content.sub!(/version "[^"]*"/, "version \"#{ENV.fetch("FORMULA_VERSION")}\"")
             content.sub!(/on_arm do\n\s*sha256 "[^"]*"/,
                          "on_arm do\n    sha256 \"#{ENV.fetch("ARM_SHA")}\"")
-            # Fill (or reveal) the intel block when an x86_64 sha exists.
-            if ENV.fetch("INTEL_SHA") != ""
-              if content.include?("# on_intel do")
-                content.sub!("# on_intel do\n  #   sha256 \"REPLACE_ME\"\n  # end",
-                             "on_intel do\n    sha256 \"#{ENV.fetch("INTEL_SHA")}\"\n  end")
-              else
-                content.sub!(/on_intel do\n\s*sha256 "[^"]*"/,
-                             "on_intel do\n    sha256 \"#{ENV.fetch("INTEL_SHA")}\"")
-              end
-            end
             File.write(ENV.fetch("FORMULA_FILE"), content)
           '
           rm -rf "$tmp"
