@@ -1,7 +1,7 @@
 class AmberAgent < Formula
   desc "C++ AI agent harness: headless CLI, ncurses TUI, benchmark harness"
   homepage "https://github.com/jtrefon/amber"
-  version "0.8.4"
+  version "0.8.5"
   url "https://github.com/jtrefon/amber/releases/download/v#{version}/amber-#{version}-darwin-arm64.tar.gz"
   license "Apache-2.0"
 
@@ -9,7 +9,7 @@ class AmberAgent < Formula
   # .github/workflows/bump.yml). Apple Silicon only: amber no longer ships
   # Intel macOS tarballs, so no on_intel block exists.
   on_arm do
-    sha256 "b539ee06e81e83e4bab724c96156cf7fb66502f3299bc249e227dab83edaa272"
+    sha256 "592b91d02c313ba6bef9813f80acd56df0ac67c78c2225328e49fe335c3282f5"
   end
 
   # The release tarball is a staged install tree (usr/local/{bin,lib,include,
